@@ -10,6 +10,23 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rollNo, setRollNo] = useState("");
+  const [networkNotice, setNetworkNotice] = useState(false);
+
+  const startDemoSession = (role, userEmail, dept = "CSE", roll = "") => {
+    const demoUser = {
+      _id: "demo-user-123",
+      name: role === "admin" ? "Demo Admin" : role === "staff" ? `${dept} Staff` : "Demo Student",
+      email: userEmail || `${role}@erp.com`,
+      role: role,
+      department: dept,
+      rollNo: roll || "21CS001",
+      token: "demo-jwt-token-12345"
+    };
+    login(demoUser);
+    if (role === "admin") navigate("/dashboard");
+    else if (role === "staff") navigate("/staff");
+    else navigate("/my-results");
+  };
 
   const handleAdminStaffLogin = async (e) => {
     e.preventDefault();
@@ -19,7 +36,11 @@ function Login() {
       if (res.data.user.role === "admin") navigate("/dashboard");
       else navigate("/staff");
     } catch (err) {
-      alert(err.response?.data?.msg || "Login failed");
+      if (!err.response) {
+        setNetworkNotice(true);
+      } else {
+        alert(err.response?.data?.msg || "Login failed");
+      }
     }
   };
 
@@ -30,30 +51,49 @@ function Login() {
       login({ ...res.data.user, token: res.data.token });
       navigate("/my-results");
     } catch (err) {
-      alert(err.response?.data?.msg || "Login failed");
+      if (!err.response) {
+        setNetworkNotice(true);
+      } else {
+        alert(err.response?.data?.msg || "Login failed");
+      }
     }
   };
 
   return (
     <div className="d-flex justify-content-center align-items-center"
-      style={{ height: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
-      <div className="card shadow-lg p-5" style={{ width: "450px", borderRadius: "20px", border: "none" }}>
+      style={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", padding: "20px" }}>
+      <div className="card shadow-lg p-4 p-md-5" style={{ width: "100%", maxWidth: "480px", borderRadius: "20px", border: "none" }}>
         <div className="text-center mb-4">
           <div style={{ fontSize: "3rem", marginBottom: "6px", lineHeight: 1 }}>🏫</div>
           <h2 style={{ fontWeight: "700", color: "#1f2937" }}>ERP Student Management</h2>
           <p style={{ color: "#6b7280", fontSize: "0.9rem" }}>Sign in to your account</p>
         </div>
 
+        {networkNotice && (
+          <div className="alert alert-warning text-start mb-4" style={{ fontSize: "0.85rem", borderRadius: "12px" }}>
+            <strong>⚡ Backend Server Not Reached</strong>
+            <p className="mb-2 mt-1">
+              GitHub Pages hosts static files. To connect a live MongoDB database, deploy the backend to Render/Railway and configure <code>VITE_API_URL</code>.
+            </p>
+            <button
+              className="btn btn-dark btn-sm w-100 fw-bold mt-1"
+              onClick={() => startDemoSession(tab, email, "CSE", rollNo)}
+            >
+              🚀 Continue in Demo Mode ({tab.toUpperCase()})
+            </button>
+          </div>
+        )}
+
         <div className="d-flex mb-4" style={{ gap: "8px" }}>
           <button className={`btn flex-fill ${tab === "admin" ? "btn-primary" : "btn-light"}`}
             style={{ borderRadius: "10px", fontWeight: tab === "admin" ? "600" : "400" }}
-            onClick={() => setTab("admin")}>Admin</button>
+            onClick={() => { setTab("admin"); setNetworkNotice(false); }}>Admin</button>
           <button className={`btn flex-fill ${tab === "staff" ? "btn-primary" : "btn-light"}`}
             style={{ borderRadius: "10px", fontWeight: tab === "staff" ? "600" : "400" }}
-            onClick={() => setTab("staff")}>Staff</button>
+            onClick={() => { setTab("staff"); setNetworkNotice(false); }}>Staff</button>
           <button className={`btn flex-fill ${tab === "student" ? "btn-primary" : "btn-light"}`}
             style={{ borderRadius: "10px", fontWeight: tab === "student" ? "600" : "400" }}
-            onClick={() => setTab("student")}>Student</button>
+            onClick={() => { setTab("student"); setNetworkNotice(false); }}>Student</button>
         </div>
 
         {tab !== "student" ? (
