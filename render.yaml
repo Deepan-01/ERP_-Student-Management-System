@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: erp-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: MONGO_URI
+        value: mongodb://localhost:27017/erp_student_management
+      - key: JWT_SECRET
+        value: mysecretkey
+      - key: PORT
+        value: 5000
+
+  - type: static
+    name: erp-frontend
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://erp-backend.onrender.com

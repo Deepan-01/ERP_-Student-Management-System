@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production build
+dist/
+**/dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Logs and debug files
+*.log
+server-err.txt
+server-out.txt
+npm-debug.log*
+yarn-debug.log*
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Duplicate nested repository folder
+ERP-Student_management_system/

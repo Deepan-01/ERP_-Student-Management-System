@@ -1,0 +1,63 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_X7xcXRInq53F0W3nEFF-2xBlbqYi0rXlv0xw7H_teg&s=10");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 30px;
+}
+
+.dashboard-container::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.75);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dashboard-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.card {
+  backdrop-filter: blur(5px);
+}
+
+body {
+  background: #f4f7fc;
+}
+
+.dashboard-title {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.card {
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 25px rgb(212, 15, 15);
+}
+
+.dashboard-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.dashboard-card {
+  border-radius: 15px;
+}
+
+.dashboard-title {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
