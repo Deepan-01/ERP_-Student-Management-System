@@ -7,7 +7,7 @@ WORKDIR /app/frontend
 
 # Install dependencies first (better layer caching)
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy frontend source and build
 COPY frontend/ .
@@ -22,7 +22,7 @@ FROM node:20-alpine AS backend-builder
 WORKDIR /app/backend
 
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 COPY backend/ .
 
@@ -38,7 +38,7 @@ RUN apk add --no-cache nginx supervisor
 
 # ── Nginx config ──────────────────────────────────────────────
 RUN mkdir -p /run/nginx
-COPY --from=frontend-builder /app/frontend/build /usr/share/nginx/html
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
 RUN cat > /etc/nginx/http.d/default.conf <<'EOF'
 server {
@@ -99,8 +99,6 @@ EOF
 # ── Security: non-root user ───────────────────────────────────
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app /usr/share/nginx/html
-# nginx needs root to bind port 80 — supervisor runs as root, spawns nginx
-# node child runs as the process user set by supervisor env below
 
 # ── Environment variables (override at runtime) ───────────────
 ENV NODE_ENV=production \
