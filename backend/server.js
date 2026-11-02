@@ -47,22 +47,47 @@ const leaveRoutes = require("./routes/leaveRoutes");
 
 const { auth, authorizeRoles } = require("./middleware/authMiddleware");
 
+const fs = require("fs");
 const app = express();
+
+// Ensure uploads folder exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Database Connection
 connectDB().then(seedDefaults);
 
 // Middleware
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "https://deepan-01.github.io",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL
-    : 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1") ||
+      origin.endsWith(".github.io")
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json());
 
 // Serve uploaded files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadsDir));
 
 // Routes
 app.use("/api/auth", authRoutes);

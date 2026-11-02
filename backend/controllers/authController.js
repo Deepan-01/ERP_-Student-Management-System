@@ -12,6 +12,10 @@ const hardcodedStaff = {
 };
 
 const hardcodedStudents = {
+  "922524244003": { name: "DEEPAN RAJ N", department: "CSBS" },
+  "922524244040": { name: "Prakash", department: "CSBS" },
+  "922524244009": { name: "GOWRISANKARAN", department: "CSBS" },
+  "922524244010": { name: "hariez", department: "CSBS" },
   "23CS001": { name: "Arun Kumar", department: "CSE" },
   "23CS002": { name: "Priya Devi", department: "CSE" },
   "23IT001": { name: "Ravi Shankar", department: "IT" },
@@ -51,16 +55,30 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const hc = hardcodedStaff[email];
-    if (!hc) return res.status(400).json({ msg: "User not found" });
-    if (password !== hc.password) return res.status(400).json({ msg: "Invalid Password" });
-    let userId = "hardcoded";
-    try {
-      let user = await User.findOne({ email });
-      if (!user) user = await User.create({ name: hc.name, email, password: hc.password, role: hc.role, department: hc.department });
-      userId = user._id;
-    } catch (_) {}
-    const token = jwt.sign({ id: userId, role: hc.role, name: hc.name, department: hc.department }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.json({ token, user: { id: userId, name: hc.name, email, role: hc.role, department: hc.department } });
+    if (hc) {
+      if (password !== hc.password) return res.status(400).json({ msg: "Invalid Password" });
+      let userId = "hardcoded";
+      try {
+        let user = await User.findOne({ email });
+        if (!user) {
+          const hashed = await bcrypt.hash(hc.password, 10);
+          user = await User.create({ name: hc.name, email, password: hashed, role: hc.role, department: hc.department });
+        }
+        userId = user._id;
+      } catch (_) {}
+      const token = jwt.sign({ id: userId, role: hc.role, name: hc.name, department: hc.department }, process.env.JWT_SECRET, { expiresIn: "1d" });
+      return res.json({ token, user: { id: userId, name: hc.name, email, role: hc.role, department: hc.department } });
+    }
+
+    // Check MongoDB for registered users
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ msg: "User not found" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ msg: "Invalid Password" });
+
+    const token = jwt.sign({ id: user._id, role: user.role, name: user.name, department: user.department }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    return res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department } });
   } catch (err) {
     res.status(500).json({ msg: "Login failed" });
   }
@@ -68,15 +86,28 @@ exports.login = async (req, res) => {
 
 exports.studentLogin = async (req, res) => {
   try {
-    const { rollNo } = req.body;
-    const hc = hardcodedStudents[rollNo];
-    if (!hc) return res.status(400).json({ msg: "Student not found" });
-    try {
-      let student = await Student.findOne({ rollNo });
-      if (!student) await Student.create({ rollNo, name: hc.name, department: hc.department, year: 3 });
-    } catch (_) {}
-    const token = jwt.sign({ rollNo, role: "student", name: hc.name, department: hc.department }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.json({ token, user: { rollNo, name: hc.name, role: "student", department: hc.department } });
+    const rawRoll = req.body.rollNo;
+    if (!rawRoll) return res.status(400).json({ msg: "Please enter your register number" });
+    const rollNo = String(rawRoll).trim();
+
+    // Check hardcoded dictionary (case-insensitive)
+    const hcKey = Object.keys(hardcodedStudents).find(k => k.toLowerCase() === rollNo.toLowerCase());
+    if (hcKey) {
+      const hc = hardcodedStudents[hcKey];
+      try {
+        let student = await Student.findOne({ rollNo: hcKey });
+        if (!student) await Student.create({ rollNo: hcKey, name: hc.name, department: hc.department, year: 3 });
+      } catch (_) {}
+      const token = jwt.sign({ rollNo: hcKey, role: "student", name: hc.name, department: hc.department }, process.env.JWT_SECRET, { expiresIn: "1d" });
+      return res.json({ token, user: { rollNo: hcKey, name: hc.name, role: "student", department: hc.department } });
+    }
+
+    // Check MongoDB for dynamically created students
+    const student = await Student.findOne({ rollNo: { $regex: new RegExp(`^${rollNo}$`, "i") } });
+    if (!student) return res.status(400).json({ msg: "Student not found" });
+
+    const token = jwt.sign({ rollNo: student.rollNo, role: "student", name: student.name, department: student.department }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    return res.json({ token, user: { rollNo: student.rollNo, name: student.name, role: "student", department: student.department } });
   } catch (err) {
     res.status(500).json({ msg: "Login failed" });
   }

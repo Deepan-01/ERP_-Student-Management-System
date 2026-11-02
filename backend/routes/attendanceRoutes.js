@@ -21,6 +21,7 @@ router.delete("/:id", deleteAttendance);
 
 router.get("/percentage/:rollNo", getAttendancePercentage);
 router.get("/low", getLowAttendanceStudents);
+router.get("/low-attendance", getLowAttendanceStudents);
 router.get("/monthly", getMonthlyAttendanceReport);
 router.get("/department", getDepartmentAttendanceStats);
 router.get("/export/excel", exportAttendanceExcel);

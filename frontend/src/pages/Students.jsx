@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 import api from "../services/api";
 import "./Students.css";
@@ -190,6 +191,7 @@ function Students() {
                     <td>{student.year}</td><td>{student.email}</td><td>{student.address}</td>
                     <td>{student.parentName}</td><td>{student.parentPhone}</td>
                     <td>
+                      <Link to={`/student/${student._id}`} className="btn btn-info text-white btn-sm me-1">View</Link>
                       <button className="btn btn-success btn-sm me-1" onClick={() => editStudent(student)}>Edit</button>
                       <button className="btn btn-danger btn-sm" onClick={() => deleteStudent(student._id)}>Delete</button>
                     </td>
